@@ -62,7 +62,7 @@ int main(int argc, char const *argv[])
     while (1)
     {
 
-        monitor();
+        monitor("MonitoredFolder");
     }
 
     syslog(LOG_NOTICE, "First daemon terminated.");

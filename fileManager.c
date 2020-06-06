@@ -13,27 +13,31 @@
 
 void deleteFile(const char *fileName, const char *directory)
 {
-    char *file = malloc( (char*)(strlen(fileName)+strlen(directory)));
+    int size = strlen(fileName)+strlen(directory);
+    char *file = (char*) malloc(size * sizeof(char));
     sprintf(file,"%s/%s",directory,fileName);
     printf("%s\n",file);
     if (remove(file) == 0)
         printf("Deleted successfully\n");
     else
         printf("Unable to delete the file\n");
+    
+    free(file);
 }
 
 void CreateOrModifyFile(const char * fileName, const char * fileContet, const char *directory){
 
     FILE * file;
-    char *fileFullPath = malloc( (char*)(strlen(fileName)+strlen(directory)));
-    sprintf(file,"%s/%s",directory,fileName);
+    int size = strlen(fileName)+strlen(directory);
+    char *fileFullPath = (char*) malloc(size * sizeof(char));
+    sprintf(fileFullPath,"%s/%s",directory,fileName);
 
     file = fopen(fileFullPath, "w");
 
 
-    fprintf(file,fileContet);
+    fprintf(file,"%s",fileContet);
 
-
+    free(fileFullPath);
     fclose(file);
 
 }
@@ -62,4 +66,5 @@ char *readFile(const char *fileName)
 
     return code;
 }
+
 
