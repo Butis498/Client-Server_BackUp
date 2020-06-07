@@ -20,19 +20,75 @@ typedef struct Node {
     struct Node* next; 
 } Node;
 
-
 pthread_mutex_t lock;
 pthread_mutex_t list_lock;
 
-void inotifyMonitor(char* current_dir, Node* head){
+//function declarations
+void sig_func(int sig);
+Node* newThreadForSubDir(char* nested_dir, Node* tail);
+Node* inotifyMonitor(char* current_dir, Node* head, Node* tail);
+void* directoryMonitorThread(void *dirName);
+int monitor(char* rootDir);
+
+//Catch the signall to stop thread
+void sig_func(int sig){
+
+    write(1, "Caught signal: ", 15);
+
+    char id[16];
+    snprintf(id, 16, "%d", (int)pthread_self());
+
+    write(1, id, 16);
+    write(1, "\n", 1);
+    
+    //signal(SIGSEGV,sig_func);
+    pthread_exit(NULL);
+}
+
+//is called in order to monitor some new directory, while adding its thread to the linked list of the parent
+Node* newThreadForSubDir(char* nested_dir, Node* tail){
+    
+    printf("NEW DIR ADDED: \t%s\n", nested_dir);
+    
+    //recursive call to directoryMonitorThread by creating another thread with it
+    pthread_t* newThread = (pthread_t*)malloc(sizeof(pthread_t));
+    int err = pthread_create(newThread, NULL, &directoryMonitorThread, (void*)nested_dir);
+    
+    if (err != 0){
+        printf("\ncan't create thread for monitor of dir %s, ERROR:[%s]\n", nested_dir, strerror(err));
+    }
+    else{//push the newly created monitor to the linked list
+        
+        monitoredDir newMonitor;
+
+        //fill the new monitr params, to push it to the list
+        newMonitor.path = nested_dir;
+        newMonitor.thread = newThread;
+        newMonitor.alive = 1;
+
+        pthread_mutex_lock(&list_lock);
+        //push the monitor to the list, and update the tail
+        tail->data = newMonitor;
+        tail->next = (Node*)malloc(sizeof(Node));
+        tail->next->next = NULL;
+
+        //printf("\tPath: %s, Alive = %d\n", tail->data.path, tail->data.alive);
+
+        tail = tail->next;
+        pthread_mutex_unlock(&list_lock);
+    }
+
+    return tail;
+}
+
+//original monitor
+//uses inotify to detect changes inside the directory and logs them to the syslog
+Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
     
     int length, i = 0;
     int fd; //file descriptor
     int wd; //watch descriptor
     char buffer[BUF_LEN];
-   
-    /*char *current_dir = (char *)(malloc(strlen(dirName) * sizeof(char)));
-    sprintf(current_dir, "%s", dirName);*/
 
     //initializes a new inotify instance and returns a file descriptor
     fd = inotify_init();
@@ -69,6 +125,7 @@ void inotifyMonitor(char* current_dir, Node* head){
             
                 if (event->mask & IN_ISDIR) { //if the subject of this event is a directory
                     syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
+                    tail = newThreadForSubDir(new_dir, tail); //monitor the newly created directory
                     //monitor(new_dir);
                 }
                 else { //if not, then it was a file
@@ -79,12 +136,13 @@ void inotifyMonitor(char* current_dir, Node* head){
 
                 if (event->mask & IN_ISDIR) {
                     syslog(LOG_NOTICE, "The directory %s was deleted.\n", new_dir);
+                    //TODO: recursively drop monitor for deleted file name
                 }
                 else {
                     syslog(LOG_NOTICE, "The file %s was deleted.\n", new_dir);
                 }
             } 
-            else if (event->mask & IN_MODIFY) { //File was modified (ONLY FOR FILES     )
+            else if (event->mask & IN_MODIFY) { //File was modified (ONLY FOR FILES)
                 if (event->mask & IN_ISDIR) {                 
                     syslog(LOG_NOTICE, "The directory %s was modified.\n", new_dir);
                     //monitor(new_dir);
@@ -97,6 +155,7 @@ void inotifyMonitor(char* current_dir, Node* head){
 
                 if (event->mask & IN_ISDIR) {                
                     syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
+                    tail = newThreadForSubDir(new_dir, tail); //monitor the new name of the modified directory
                 }
                 else {                
                     syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
@@ -106,6 +165,7 @@ void inotifyMonitor(char* current_dir, Node* head){
 
                 if (event->mask & IN_ISDIR) {
                     syslog(LOG_NOTICE, "The directory %s was moved out.\n", new_dir);
+                    //TODO: recursively drop monitor for old file name
                 }
                 else {
                     syslog(LOG_NOTICE, "The file %s was moved out.\n", new_dir);
@@ -121,10 +181,14 @@ void inotifyMonitor(char* current_dir, Node* head){
     (void)inotify_rm_watch(fd, wd);
     //close the inotify event file descritor
     (void)close(fd);
+
+    return tail;
 }
 
+
 //Monitor thread
-//
+//thread function used when monitoring a directory
+//first recursively creates directoryMonitorThread for all its sub directories and then infinetly loops while monitoring its own directory.
 void* directoryMonitorThread(void *dirName){
     //Local linked list of nested monitoredDir for this directory thread
     Node* head; //monitoredDir linked list head
@@ -148,6 +212,7 @@ void* directoryMonitorThread(void *dirName){
         while ((dir = readdir(d)) != NULL) //read all the contents of the directory
         {
             //execute only on nested directories, (d_type == 4 for a drectory, 8 for a file)
+            //creates a new thread of directoryMonitorThread for each sub directory
             if(dir->d_type == 4 && dir->d_name[0] != '.' ){
 
                 //copy of the new nested dir name concatenated to the current dir
@@ -196,7 +261,7 @@ void* directoryMonitorThread(void *dirName){
     //monitorLoop
     while (1){
         printf("Monitoring %s again ====================================================\n", current_dir);
-        inotifyMonitor(current_dir, head);
+        tail = inotifyMonitor(current_dir, head, tail);
     }
 
     //printf("End monitor of dir: %s\n", current_dir);
@@ -238,6 +303,9 @@ int monitor(char* rootDir)
         return 0;
     }
     
+    /*sleep(2); // Leave time for initialisation
+    pthread_kill(*newThread, SIGSEGV);*/
+
     //join thread until end of execution
     pthread_join(*newThread, NULL);
     printf("END OF JOIN\n");
@@ -250,8 +318,11 @@ int monitor(char* rootDir)
 
 //main function for testing purposes
 int main(){
-    
+
+    signal(SIGSEGV,sig_func); // Register signal handler before going multithread
+
     monitor("MonitoredFolder");
+    
 
     /*while (1)
     {
