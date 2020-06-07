@@ -1,19 +1,33 @@
 # Execute Backup Service #
 
 ## Give permission to run file ##
-
+```console
 chmod +x run.sh
-
+```
 ## Run executable ##
-
+```console
 ./run.sh
-
+```
 ## TEST FUNCTIONALITY ##
 
-open a linix terminal and type "grep firstdaemon /var/log/syslog"
+open a linux terminal and type 
+```console
+grep firstdaemon /var/log/syslog
+```
 this will open the log of the events in the service.
 
 ### Kill the service ###
 
-open a linix terminal and type "grep firstdaemon /var/log/syslog"
-this will return something like "firstdaemon[5852]" with other data, you should type in the terminal "Kill -11 PID" or in my case "Kill -11 5852"  the PID(process id will) not always be the same.
+Open a linux terminal and type 
+```console
+grep firstdaemon /var/log/syslog
+```
+this will return something like :
+```console
+firstdaemon[5852]
+```
+with other data, you should type in the terminal 
+```console 
+Kill -11 PID
+```
+or in my case "Kill -11 5852"  the PID(process id will) not always be the same.
