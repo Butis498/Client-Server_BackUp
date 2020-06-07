@@ -1,11 +1,10 @@
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/inotify.h>
 #include <unistd.h>
-#include<string.h>
+#include <string.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
 #include <signal.h>
@@ -131,10 +130,16 @@ void client(){
     // close the socket
     close(sockfd);
 
-    syslog(LOG_NOTICE, "First daemon terminated.");
+    syslog(LOG_NOTICE, "Client daemon terminated.");
     closelog();
 
 }
 
-    
+//main function for testing purposes
+int main(){
+    while (1)
+    {
+        client();
+    }
+}
 
