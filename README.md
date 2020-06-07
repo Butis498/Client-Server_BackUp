@@ -8,6 +8,7 @@ chmod +x run.sh
 ```console
 ./run.sh
 ```
+This will create a folder named 'MonitoredFolder' which will be monitored by the service. The service also will start
 ## TEST FUNCTIONALITY ##
 
 open a linux terminal and type 
