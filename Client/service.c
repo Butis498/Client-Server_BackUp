@@ -60,6 +60,7 @@ int main(int argc, char const *argv[])
 
     while (1)
     {
+        signal(SIGSEGV,sig_func);
         monitor("MonitoredFolder");
     }
 
