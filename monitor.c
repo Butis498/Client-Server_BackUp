@@ -1,4 +1,4 @@
-#include "fileManager.c"
+#include "client.c"
 
 #define EVENT_SIZE (sizeof(struct inotify_event))
 #define BUF_LEN (1024 * (EVENT_SIZE + 16))
@@ -41,14 +41,15 @@ void monitor(char *dirName)
 
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendCreateDirectoryPetition(current_dir, event->name);
                     syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
-
-                    monitor(new_dir);
+                    //monitor(new_dir);
                 }
                 else
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendCreateFileOrModifyPetition(event->name, "", current_dir);
                     syslog(LOG_NOTICE, "The file %s was created.\n", new_dir);
                 }
             }
@@ -58,12 +59,14 @@ void monitor(char *dirName)
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was deleted.\n", new_dir);
                 }
                 else
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendDeleteFilePetition(event->name, current_dir);
                     syslog(LOG_NOTICE, "The file %s was deleted.\n", new_dir);
                 }
             }
@@ -73,14 +76,18 @@ void monitor(char *dirName)
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    /* 
+                        Mission implementation
+                    */
                     syslog(LOG_NOTICE, "The directory %s was modified.\n", new_dir);
-                    monitor(new_dir);
-                    
+
+                   // monitor(new_dir);
                 }
                 else
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendCreateFileOrModifyPetition(event->name, readFile(event->name), current_dir);
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
                 }
             }
@@ -90,12 +97,18 @@ void monitor(char *dirName)
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    /* 
+                        Missiing implementation
+                    */
                     syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
                 }
                 else
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    /* 
+                        Mission impementation
+                    */
                     syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
                 }
             }
@@ -105,12 +118,14 @@ void monitor(char *dirName)
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was moved out.\n", new_dir);
                 }
                 else
                 {
                     char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir)) * sizeof(char));
                     sprintf(new_dir, "%s/%s", current_dir, event->name);
+                    sendDeleteFilePetition(event->name, current_dir);
                     syslog(LOG_NOTICE, "The file %s was moved out.\n", new_dir);
                 }
             }
