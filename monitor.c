@@ -107,84 +107,111 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
     }
 
     //for every item in the buffer as read from the fd file descriptor
-    while (i < length)
+       while (i < length)
     {
-        //Cast the item wich beggins at position 'i' in the buffer as an inotify_event
-        struct inotify_event *event = (struct inotify_event *)&buffer[i];
-
-        if (event->len) {
-
-            //new_dir is the path to the affected file inside the watched directory
+        struct inotify_event *event =
+            (struct inotify_event *)&buffer[i];
+        if (event->len)
+        {
             char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir) + 2) * sizeof(char));
             sprintf(new_dir, "%s/%s", current_dir, event->name);
 
             printf("Modified path: %s \n", new_dir);
+            if (event->mask & IN_CREATE)
+            {
+                if (event->mask & IN_ISDIR)
+                {
 
-            //Check the mask of the event, and behave acordingly (the mask describes the reason of the event)
-            if (event->mask & IN_CREATE) { //file/directory created in the watched directory
-            
-                if (event->mask & IN_ISDIR) { //if the subject of this event is a directory
-                    syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
+                    
+                    sendCreateDirectoryPetition(current_dir, event->name);
                     tail = newThreadForSubDir(new_dir, tail); //monitor the newly created directory
+
+                    syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
                     //monitor(new_dir);
                 }
-                else { //if not, then it was a file
+                else
+                {
+                    
+                    sendCreateFileOrModifyPetition(event->name, "", current_dir);
                     syslog(LOG_NOTICE, "The file %s was created.\n", new_dir);
                 }
-            } 
-            else if (event->mask & IN_DELETE) { // file/directory deleted from watched directory
+            }
+            else if (event->mask & IN_DELETE)
+            {
+                if (event->mask & IN_ISDIR)
+                {
 
-                if (event->mask & IN_ISDIR) {
+                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was deleted.\n", new_dir);
-                    //TODO: recursively drop monitor for deleted file name
                 }
-                else {
+                else
+                {
+
+                    sendDeleteFilePetition(event->name, current_dir);
                     syslog(LOG_NOTICE, "The file %s was deleted.\n", new_dir);
                 }
-            } 
-            else if (event->mask & IN_MODIFY) { //File was modified (ONLY FOR FILES)
-                if (event->mask & IN_ISDIR) {                 
+            }
+            else if (event->mask & IN_MODIFY)
+            {
+                if (event->mask & IN_ISDIR)
+                {
+
                     syslog(LOG_NOTICE, "The directory %s was modified.\n", new_dir);
-                    //monitor(new_dir);
+
+                    // monitor(new_dir);
                 }
-                else {                
+                else
+                {
+
+                    sendCreateFileOrModifyPetition(event->name, readFile(event->name), current_dir);
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
                 }
             }
-            else if (event->mask & IN_MOVED_TO) { //Generated for the directory containing the new filename when a file is renamed
+            else if (event->mask & IN_MOVED_TO)
+            {
+                if (event->mask & IN_ISDIR)
+                {
 
-                if (event->mask & IN_ISDIR) {                
-                    syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
+                    /* 
+                        Missiing implementation
+                    */
                     tail = newThreadForSubDir(new_dir, tail); //monitor the new name of the modified directory
+
+                    syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
                 }
-                else {                
+                else
+                {
+
+                    /* 
+                        Mission impementation
+                    */
                     syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
                 }
             }
-            else if (event->mask & IN_MOVED_FROM) { //Generated for the directory containing the old filename when a file is renamed
+            else if (event->mask & IN_MOVED_FROM)
+            {
+                if (event->mask & IN_ISDIR)
+                {
 
-                if (event->mask & IN_ISDIR) {
+                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was moved out.\n", new_dir);
-                    //TODO: recursively drop monitor for old file name
                 }
-                else {
+                else
+                {
+
+                    sendDeleteFilePetition(event->name, current_dir);
                     syslog(LOG_NOTICE, "The file %s was moved out.\n", new_dir);
                 }
             }
         }
-
-        //move the index to the next item according to the EVENT_SIZE and the current event lenght
         i += EVENT_SIZE + event->len;
     }
 
-    //remove the watch wd from the fd 
     (void)inotify_rm_watch(fd, wd);
-    //close the inotify event file descritor
     (void)close(fd);
 
     return tail;
 }
-
 
 //Monitor thread
 //thread function used when monitoring a directory
