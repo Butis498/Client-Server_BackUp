@@ -4,7 +4,7 @@
 
 chmod +x run.sh
 
-### Run executable ###
+## Run executable ##
 
 ./run.sh
 
