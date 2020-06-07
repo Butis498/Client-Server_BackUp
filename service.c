@@ -59,10 +59,10 @@ int main(int argc, char const *argv[])
 {
     skeleton_daemon();
 
-    while (1)
-    {
+    //while (1)
+    //{
         monitor("MonitoredFolder");
-    }
+    //}
 
     syslog(LOG_NOTICE, "First daemon terminated.");
     closelog();
