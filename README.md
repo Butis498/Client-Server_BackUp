@@ -8,7 +8,11 @@ chmod +x run.sh
 ```console
 ./run.sh
 ```
-This will create a folder named 'MonitoredFolder' which will be monitored by the service. The service also will start
+This will create a folder named 'MonitoredFolder' which will be monitored by the service. The service also will start. After this you open a new linux terminal in which you run the comand:
+```console
+./Server/server
+```
+which will start running the server for the UpdaterServerFolder updates.
 ## TEST FUNCTIONALITY ##
 
 open a linux terminal and type 
