@@ -57,13 +57,9 @@ static void skeleton_daemon()
 int main(int argc, char const *argv[])
 {
     skeleton_daemon();
-
-    while (1)
-    {
-        signal(SIGSEGV,sig_func);
-        monitor("MonitoredClientFolder");
-    }
-
+    
+    signal(SIGSEGV,sig_func);
+    monitor("MonitoredClientFolder");
 
     return EXIT_SUCCESS;
 }
