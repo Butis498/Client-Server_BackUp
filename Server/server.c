@@ -3,8 +3,7 @@
 #define MAX 200
 #define PORT 8080
 #define SA struct sockaddr
-char * folderName = "UpdatedServerFolder";
-
+char *folderName = "UpdatedServerFolder";
 
 void splitArgs(const char *string, char *args[])
 {
@@ -49,13 +48,42 @@ void func(int sockfd)
         if (strcmp("delete", args[0]) == 0)
         {
             char *fileName = args[1];
-            char *directory = (char*)malloc((strlen(folderName)+strlen(args[2]))* sizeof(char));
-            sprintf(directory,"%s%s",folderName,args[2] );
+            char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, args[2]);
             printf("Se eliminará archivo: \"%s%s\"\n", directory, fileName);
 
             deleteFile(fileName, directory);
             free(directory);
         }
+        else if (strcmp("deleteDir", args[0]) == 0)
+        {
+            char *directory = (char *)malloc(strlen(args[1]) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, args[1]);
+            printf("Se eliminará directorio: \"%s\"\n", directory);
+
+            deleteDirectory(directory);
+            free(directory);
+        }
+        else if (strcmp("createFile", args[0]) == 0)
+        {
+            char *fileName = args[1];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, args[2]);
+            printf("Se creara archivo: \"%s%s\"\n", directory, fileName);
+
+            CreateFile(fileName, directory);
+            free(directory);
+        }else if (strcmp("createDir", args[0]) == 0)
+        {
+            char *DirName = args[2];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(args[1])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, args[1]);
+            printf("Se creara el directorio : \"%s%s\"\n", directory, DirName);
+
+            createDirectory(directory , DirName);
+            free(directory);
+        }
+        
 
         bzero(buff, MAX);
         n = 0;
@@ -85,7 +113,7 @@ int main()
 {
     while (1)
     {
-        
+
         int sockfd, connfd, len;
         struct sockaddr_in servaddr, cli;
 

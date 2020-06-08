@@ -134,7 +134,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
                     
-                    sendCreateFileOrModifyPetition(event->name, "", current_dir+size_of_rootDirName);
+                    sendCreateFilePetition(event->name, current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was created.\n", new_dir);
                 }
             }
@@ -165,7 +165,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
 
-                    sendCreateFileOrModifyPetition(event->name, readFile(event->name), current_dir+size_of_rootDirName);
+                    sendModifyFilePetition(event->name, readFile(event->name), current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
                 }
             }

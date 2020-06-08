@@ -83,6 +83,22 @@ void CreateOrModifyFile(const char *fileName, const char *fileContet, const char
     fclose(file);
 }
 
+void CreateFile(const char *fileName, const char *directory)
+{
+
+    FILE *file;
+    int size = strlen(fileName) + strlen(directory);
+    char *fileFullPath = (char *)malloc(size * sizeof(char));
+    sprintf(fileFullPath, "%s/%s", directory, fileName);
+
+    file = fopen(fileFullPath, "w");
+
+
+    free(fileFullPath);
+    fclose(file);
+}
+
+
 int deleteDirectory(const char *directory)
 {
     DIR *d = opendir(directory);

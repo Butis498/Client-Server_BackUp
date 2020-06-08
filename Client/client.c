@@ -104,22 +104,36 @@ char *readFile(const char *fileName)
     return code;
 }
 
-void sendCreateFileOrModifyPetition(const char * fileName, const char * fileContet, const char *directory){
+void sendCreateFilePetition(const char * fileName, const char *directory){
+
+    char *instruccion = (char *) malloc((strlen(fileName)+strlen(directory)+strlen("createFile")+ 6)* sizeof(char));
+    sprintf(instruccion,"createFile %s %s",fileName,directory);
+    clientSendUpdate(instruccion);
+
+}
+
+void sendModifyFilePetition(const char * fileName, const char * fileContet, const char *directory){
 
 }
 
 void sendDeleteFilePetition(const char *fileName, const char *directory){
     char *instruccion = (char *) malloc((strlen(fileName)+strlen(directory)+strlen("delete")+ 6)* sizeof(char));
     sprintf(instruccion,"delete %s %s",fileName,directory);
-    
     clientSendUpdate(instruccion);
 }
 
 void sendDeleteDirectoryPetition(const char *directory){
+    char *instruccion = (char *) malloc((strlen(directory)+strlen("deleteDir")+ 6)* sizeof(char));
+    sprintf(instruccion,"deleteDir %s",directory);
+    clientSendUpdate(instruccion);
 
 }
 
 void sendCreateDirectoryPetition(const char *directory , const char * dirName){
+
+    char *instruccion = (char *) malloc((strlen(directory)+strlen("createDir")+ 6)* sizeof(char));
+    sprintf(instruccion,"createDir %s %s",directory,dirName);
+    clientSendUpdate(instruccion);
 
 }
 
