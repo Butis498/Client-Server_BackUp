@@ -144,7 +144,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 {
 
                     syslog(LOG_NOTICE, "The directory %s was deleted.\n", new_dir);
-                    sendDeleteDirectoryPetition(new_dir);
+                    sendDeleteDirectoryPetition(new_dir + size_of_rootDirName);
                     
                 }
                 else
@@ -199,7 +199,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 {
 
                     syslog(LOG_NOTICE, "The directory %s was moved out.\n", new_dir);
-                    //sendDeleteDirectoryPetition(new_dir);
+                    sendDeleteDirectoryPetition(new_dir+size_of_rootDirName);
                     
                 }
                 else

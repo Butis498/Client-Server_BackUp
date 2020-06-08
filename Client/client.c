@@ -137,7 +137,7 @@ void sendDeleteDirectoryPetition(const char *directory){
 void sendCreateDirectoryPetition(const char *directory , const char * dirName){
 
     char *instruccion = (char *) malloc((strlen(directory)+strlen("createDir")+ 6)* sizeof(char));
-    sprintf(instruccion,"createDir %s %s",directory,dirName);
+    sprintf(instruccion,"createDir %s /%s",directory,dirName);
     clientSendUpdate(instruccion);
 
 }

@@ -40,7 +40,7 @@ static void skeleton_daemon()
 
     /* Change the working directory to the root directory */
     /* or another appropriated directory */
-    chdir("~/Documents/ProgramacionAvanzada/Practices/Practice16");
+    chdir("~/Documents/ProgramacionAvanzada/Mission6");
 
     /* Close all open file descriptors */
     int x;
@@ -56,7 +56,7 @@ static void skeleton_daemon()
 
 int main(int argc, char const *argv[])
 {
-    //skeleton_daemon();
+    skeleton_daemon();
 
     syslog(LOG_NOTICE, "+++> SERVICE INITIATED: serviceBackUp/firstdaemon ==========================================================================================================================================================\n");
 

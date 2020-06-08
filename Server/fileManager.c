@@ -102,6 +102,8 @@ void CreateFile(const char *fileName, const char *directory)
 int deleteDirectory(const char *directory)
 {
     DIR *d = opendir(directory);
+    printf("%s\n", directory);
+
     size_t path_len = strlen(directory);
     int r = -1;
 
@@ -152,7 +154,7 @@ void createDirectory(const char *directory, const char *dirName)
 {
 
     struct stat st = {0};
-    int size = strlen(dirName) + strlen(directory);
+    int size = strlen(dirName) + strlen(directory) + 3;
     char *dirFullPath = (char *)malloc(size * sizeof(char));
 
     sprintf(dirFullPath, "%s/%s", directory, dirName);
