@@ -47,7 +47,7 @@ void sendCreateFileOrModifyPetition(const char * fileName, const char * fileCont
 }
 
 void sendDeleteFilePetition(const char *fileName, const char *directory){
-
+    //write(sockfd, buff, sizeof(buff));
 }
 
 void sendDeleteDirectoryPetition(const char *directory){
@@ -85,9 +85,10 @@ void func(int sockfd)
         bzero(buff, sizeof(buff));
         read(sockfd, buff, sizeof(buff));
         printf("From Server : %s", buff);
-        if ((strncmp(buff, "exit", 4)) == 0)
+        //if ((strncmp(buff, "exit", 4)) == 0)
+        if ((strncmp(buff, "operacionExitosa", 16)) == 0)
         {
-            printf("Client Exit...\n");
+            printf("operacionExitosa... Client Exit...\n");
             break;
         }
     }
@@ -137,9 +138,7 @@ void client(){
 
 //main function for testing purposes
 int main(){
-    while (1)
-    {
-        client();
-    }
+    
+    client();
 }
 

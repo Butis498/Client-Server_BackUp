@@ -28,6 +28,23 @@ void deleteFile(const char *fileName, const char *directory)
     free(file);
 }
 
+/*
+void deleteFile(const char *fileName, const char *directory)
+{
+    int size = strlen(fileName) + strlen(directory);
+    char *file = (char *)malloc(size * sizeof(char));
+    sprintf(file, "./UpdatedServerFolder/0.txt");
+    //sprintf(file, "1.txt");
+    printf("%s\n", file);
+    if (remove(file) == 0)
+        printf("Deleted successfully\n");
+    else
+        printf("Unable to delete the file\n");
+
+    free(file);
+}
+*/
+
 void CreateOrModifyFile(const char *fileName, const char *fileContet, const char *directory)
 {
 
