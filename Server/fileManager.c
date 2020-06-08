@@ -16,10 +16,19 @@
 
 void deleteFile(const char *fileName, const char *directory)
 {
-    int size = strlen(fileName) + strlen(directory);
+    int size = strlen(fileName) + strlen(directory) + 5;
     char *file = (char *)malloc(size * sizeof(char));
+
     sprintf(file, "%s/%s", directory, fileName);
+    printf("fileName: \"%s\"\n", fileName);
+    //sprintf(file, "%s/%s", directory, "0.txt");
     printf("%s\n", file);
+
+    //chdir(directory);
+
+    char buffer[1024];
+    printf("Current directory: %s\n", getcwd(buffer, sizeof(buffer)));
+
     if (remove(file) == 0)
         printf("Deleted successfully\n");
     else

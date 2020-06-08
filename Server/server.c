@@ -22,7 +22,7 @@ void func(int sockfd)
         if (strncmp("eliminar", buff, 8) == 0) {
             char fileName[strlen(buff) - 9];
             strncpy(fileName, buff + 9, strlen(buff) - 10);
-            printf("Se eliminará archivo: %s\n", fileName);
+            printf("Se eliminará archivo: \"%s\"\n", fileName);
 
             deleteFile(fileName,"./UpdatedServerFolder");
 
