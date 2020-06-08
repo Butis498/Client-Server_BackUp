@@ -56,8 +56,10 @@ static void skeleton_daemon()
 
 int main(int argc, char const *argv[])
 {
-    skeleton_daemon();
-    
+    //skeleton_daemon();
+
+    syslog(LOG_NOTICE, "+++> SERVICE INITIATED: serviceBackUp/firstdaemon ==========================================================================================================================================================\n");
+
     signal(SIGSEGV,sig_func);
     monitor("MonitoredClientFolder");
 

@@ -13,24 +13,29 @@
 
 #include <netdb.h>
 #include <sys/socket.h>
+
 #define MAX 80
 #define PORT 8080
 #define SA struct sockaddr
 
 void clientSendUpdate(const char *instruccion){
 
-        int sockfd, connfd;
+    //Server connection
+    //==============================================================================
+
+    int sockfd, connfd;
     struct sockaddr_in servaddr, cli;
 
     // socket create and varification
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1)
     {
-        printf("socket creation failed...\n");
+        syslog(LOG_NOTICE, "ERROR: socket creation failed...\n");
         exit(0);
     }
-    else
-        printf("Socket successfully created..\n");
+    
+    syslog(LOG_NOTICE, "SUCCES: Socket successfully created..\n");
+
     bzero(&servaddr, sizeof(servaddr));
 
     // assign IP, PORT
@@ -41,14 +46,14 @@ void clientSendUpdate(const char *instruccion){
     // connect the client socket to server socket
     if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
     {
-        printf("connection with the server failed...\n");
+        syslog(LOG_NOTICE, "ERROR: connection with the server failed...\n");
         exit(0);
     }
     else
-        printf("connected to the server..\n");
+        syslog(LOG_NOTICE, "SUCCES: connected to the server..\n");
 
-    // function for chat
-    //func(sockfd);
+    //Sending data
+    //==============================================================================
 
     char buff[MAX];
     int n;
@@ -61,22 +66,21 @@ void clientSendUpdate(const char *instruccion){
         strcpy(buff, instruccion);
 
         //write(sockfd, buff, sizeof(buff));
+        syslog(LOG_NOTICE,"CLIENT: Sending Buffer of contents: %s\n", buff);
 
         int numbersWritten = write(sockfd, buff, sizeof(buff));
 
-        bzero(buff, sizeof(buff));
-    
-    
+        bzero(buff, sizeof(buff));    
 
     //int numbersWritten = write(sockfd, instruccion, sizeof(instruccion));
-    syslog(LOG_NOTICE, "Numbers written in write(): %d", numbersWritten);
+    syslog(LOG_NOTICE, "CLIENT: Number of bytes written in write(): %d\n", numbersWritten);
 
     // close the socket
     close(sockfd);
 
-    syslog(LOG_NOTICE, "Client daemon terminated.");
+    //syslog(LOG_NOTICE, "Client daemon terminated.");
+    syslog(LOG_NOTICE, "EVENT SENT SO SERVER\n");
     closelog();
-
 }
 
 char *readFile(const char *fileName)
@@ -89,6 +93,7 @@ char *readFile(const char *fileName)
 
     if (file == NULL)
         return NULL; //could not open file
+
     fseek(file, 0, SEEK_END);
     long f_size = ftell(file);
     fseek(file, 0, SEEK_SET);
@@ -173,48 +178,6 @@ void func(int sockfd)
     }
 }
 
-
-void client(){
-
-        int sockfd, connfd;
-    struct sockaddr_in servaddr, cli;
-
-    // socket create and varification
-    sockfd = socket(AF_INET, SOCK_STREAM, 0);
-    if (sockfd == -1)
-    {
-        printf("socket creation failed...\n");
-        exit(0);
-    }
-    else
-        printf("Socket successfully created..\n");
-    bzero(&servaddr, sizeof(servaddr));
-
-    // assign IP, PORT
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-    servaddr.sin_port = htons(PORT);
-
-    // connect the client socket to server socket
-    if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
-    {
-        printf("connection with the server failed...\n");
-        exit(0);
-    }
-    else
-        printf("connected to the server..\n");
-
-    // function for chat
-    func(sockfd);
-
-    // close the socket
-    close(sockfd);
-
-    syslog(LOG_NOTICE, "Client daemon terminated.");
-    closelog();
-
-}
-*/
 
 //main function for testing purposes
 /*

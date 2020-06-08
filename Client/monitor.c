@@ -24,13 +24,14 @@ typedef struct Node {
 pthread_mutex_t lock;
 pthread_mutex_t list_lock;
 
+int size_of_rootDirName;
+
 //function declarations
 void sig_func(int sig);
 Node* newThreadForSubDir(char* nested_dir, Node* tail);
 Node* inotifyMonitor(char* current_dir, Node* head, Node* tail);
 void* directoryMonitorThread(void *dirName);
 int monitor(char* rootDir);
-int size_of_rootDirName;
 
 //Catch the signall to stop thread
 void sig_func(int sig){
@@ -50,7 +51,7 @@ void sig_func(int sig){
 //is called in order to monitor some new directory, while adding its thread to the linked list of the parent
 Node* newThreadForSubDir(char* nested_dir, Node* tail){
     
-    syslog(LOG_NOTICE,"NEW DIR ADDED: \t%s\n", nested_dir);
+    syslog(LOG_NOTICE,"NEW DIR ADDED TO BE MONITORED: \t%s\n", nested_dir);
     
     //recursive call to directoryMonitorThread by creating another thread with it
     pthread_t* newThread = (pthread_t*)malloc(sizeof(pthread_t));
@@ -73,8 +74,6 @@ Node* newThreadForSubDir(char* nested_dir, Node* tail){
         tail->data = newMonitor;
         tail->next = (Node*)malloc(sizeof(Node));
         tail->next->next = NULL;
-
-        //syslog(LOG_NOTICE,"\tPath: %s, Alive = %d\n", tail->data.path, tail->data.alive);
 
         tail = tail->next;
         pthread_mutex_unlock(&list_lock);
@@ -116,26 +115,27 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
         if (event->len)
         {
             char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir) + 2) * sizeof(char));
-            sprintf(new_dir, "%s/%s", current_dir+size_of_rootDirName, event->name);
+            sprintf(new_dir, "%s/%s", current_dir, event->name);
 
-            syslog(LOG_NOTICE,"Modified path: %s \n", new_dir);
+            syslog(LOG_NOTICE,"EVENT DETECTED: modified path = %s \n", new_dir);
+
             if (event->mask & IN_CREATE)
             {
                 if (event->mask & IN_ISDIR)
                 {
 
-                    
-                    sendCreateDirectoryPetition(current_dir+size_of_rootDirName, event->name);
+                    syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
                     tail = newThreadForSubDir(new_dir, tail); //monitor the newly created directory
 
-                    syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
-                    //monitor(new_dir);
+                    sendCreateDirectoryPetition(current_dir+size_of_rootDirName, event->name);
+
                 }
                 else
                 {
                     
-                    sendCreateFilePetition(event->name, current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was created.\n", new_dir);
+                    sendCreateFilePetition(event->name, current_dir+size_of_rootDirName);
+                    
                 }
             }
             else if (event->mask & IN_DELETE)
@@ -143,14 +143,16 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 if (event->mask & IN_ISDIR)
                 {
 
-                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was deleted.\n", new_dir);
+                    sendDeleteDirectoryPetition(new_dir);
+                    
                 }
                 else
                 {
-
-                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
+                    
                     syslog(LOG_NOTICE, "The file %s was deleted.\n", new_dir);
+                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
+                    
                 }
             }
             else if (event->mask & IN_MODIFY)
@@ -159,35 +161,36 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 {
 
                     syslog(LOG_NOTICE, "The directory %s was modified.\n", new_dir);
+                    //
 
-                    // monitor(new_dir);
                 }
                 else
                 {
-
-                    sendModifyFilePetition(event->name, readFile(event->name), current_dir+size_of_rootDirName);
+                    
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
+                    sendModifyFilePetition(event->name, readFile(event->name), current_dir+size_of_rootDirName);
+                   
                 }
             }
             else if (event->mask & IN_MOVED_TO)
             {
                 if (event->mask & IN_ISDIR)
                 {
-
-                    /* 
-                        Missiing implementation
-                    */
-                    tail = newThreadForSubDir(new_dir, tail); //monitor the new name of the modified directory
-
+                    
                     syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
+                    tail = newThreadForSubDir(new_dir, tail); //monitor the new name of the modified directory
+                    
+                    sendCreateDirectoryPetition(current_dir+size_of_rootDirName, event->name);
+
                 }
                 else
                 {
 
+                    syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
                     /* 
                         Mission impementation
                     */
-                    syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
+                    
                 }
             }
             else if (event->mask & IN_MOVED_FROM)
@@ -195,14 +198,16 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 if (event->mask & IN_ISDIR)
                 {
 
-                    sendDeleteDirectoryPetition(new_dir);
                     syslog(LOG_NOTICE, "The directory %s was moved out.\n", new_dir);
+                    //sendDeleteDirectoryPetition(new_dir);
+                    
                 }
                 else
                 {
-
-                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
+                    
                     syslog(LOG_NOTICE, "The file %s was moved out.\n", new_dir);
+                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
+                    
                 }
             }
         }
@@ -228,10 +233,11 @@ void* directoryMonitorThread(void *dirName){
     tail = head;
 
     //create copy of the directory name
-    char *current_dir = (char *)(malloc(strlen((char*)dirName) * sizeof(char)));
+    char *current_dir = (char *)(malloc((strlen((char*)dirName) + 1) * sizeof(char)));
     sprintf(current_dir, "%s", (char*)dirName);
 
-    syslog(LOG_NOTICE,"Nested dirs of: %s\n", current_dir);
+    syslog(LOG_NOTICE,"CREATING MONITOR-THREAD FOR DIR: %s\n", current_dir);
+
     //Get contents of the directory
     DIR *d;
     struct dirent *dir;
@@ -248,7 +254,7 @@ void* directoryMonitorThread(void *dirName){
                 char *nested_dir = (char *)(malloc((strlen(dir->d_name) + strlen(current_dir) + 2) * sizeof(char)));
                 sprintf(nested_dir, "%s/%s", current_dir, dir->d_name);
 
-                syslog(LOG_NOTICE,"\t%s\n", nested_dir);
+                syslog(LOG_NOTICE,"    %s IS NESTED IN %s\n", nested_dir, current_dir);
                 
                 //recursive call to directoryMonitorThread by creating another thread with it
                 pthread_t* newThread = (pthread_t*)malloc(sizeof(pthread_t));
@@ -272,14 +278,11 @@ void* directoryMonitorThread(void *dirName){
                     tail->next = (Node*)malloc(sizeof(Node));
                     tail->next->next = NULL;
 
-                    //syslog(LOG_NOTICE,"\tPath: %s, Alive = %d\n", tail->data.path, tail->data.alive);
-
                     tail = tail->next;
                     pthread_mutex_unlock(&list_lock);
                 }
             }
         }
-        //syslog(LOG_NOTICE,"HEAD:\tPath: %s, Alive = %d\n", head->data.path, head->data.alive);
         closedir(d);
     }
 
@@ -289,11 +292,9 @@ void* directoryMonitorThread(void *dirName){
 
     //monitorLoop
     while (1){
-        syslog(LOG_NOTICE,"Monitoring %s again ====================================================\n", current_dir);
+        syslog(LOG_NOTICE,"MONITORING %s again =====================================================================================\n", current_dir);
         tail = inotifyMonitor(current_dir, head, tail);
     }
-
-    //syslog(LOG_NOTICE,"End monitor of dir: %s\n", current_dir);
 
     pthread_exit(NULL);
 }
@@ -304,6 +305,8 @@ int monitor(char* rootDir)
 {   
     size_of_rootDirName = strlen(rootDir);
     DIR* dir = opendir(rootDir);
+
+    //Verify existence of directory
     if (dir) {
         closedir(dir);
     } else if (ENOENT == errno) { //Directory does not exist.
@@ -317,13 +320,16 @@ int monitor(char* rootDir)
         syslog(LOG_NOTICE,"\n mutex init failed\n");
         return 0;
     }
-        
-    //char* rootDir = "MonitoredFolder";
+
+    char pwd[1024];
+    getcwd(pwd, sizeof(pwd));
+    syslog(LOG_NOTICE,"MAIN MONITOR THREAD WORKING FROM: %s\n", pwd);  
+
     //copy the root dir path
     char *rootDir_copy = (char *)(malloc((strlen(rootDir) + 1) * sizeof(char)));
     sprintf(rootDir_copy, "%s", rootDir);
 
-    syslog(LOG_NOTICE,"ROOT: %s\n", rootDir_copy);    
+    syslog(LOG_NOTICE,"SET MONITOR ROOT: %s\n", rootDir_copy);    
 
     pthread_t* newThread = (pthread_t*)malloc(sizeof(pthread_t));
     int err = pthread_create(newThread, NULL, &directoryMonitorThread, (void*)rootDir);
