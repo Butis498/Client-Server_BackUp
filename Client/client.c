@@ -109,8 +109,8 @@ void sendCreateFileOrModifyPetition(const char * fileName, const char * fileCont
 }
 
 void sendDeleteFilePetition(const char *fileName, const char *directory){
-    char instruccion[] = "eliminar ";
-    //strcat(instruccion, fileName);
+    char *instruccion = (char *) malloc((strlen(fileName)+strlen(directory)+strlen("delete")+ 6)* sizeof(char));
+    sprintf(instruccion,"delete %s %s",fileName,directory);
     
     clientSendUpdate(instruccion);
 }

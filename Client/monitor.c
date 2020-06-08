@@ -6,6 +6,7 @@
 #define EVENT_SIZE (sizeof(struct inotify_event)) //Size of the inotify_event structure that describes a watched filesystem event
 #define BUF_LEN (1024 * (EVENT_SIZE + 16)) 
 
+
 //structure to store a monitored directory
 typedef struct monitoredDir
 {
@@ -29,6 +30,7 @@ Node* newThreadForSubDir(char* nested_dir, Node* tail);
 Node* inotifyMonitor(char* current_dir, Node* head, Node* tail);
 void* directoryMonitorThread(void *dirName);
 int monitor(char* rootDir);
+int size_of_rootDirName;
 
 //Catch the signall to stop thread
 void sig_func(int sig){
@@ -114,7 +116,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
         if (event->len)
         {
             char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir) + 2) * sizeof(char));
-            sprintf(new_dir, "%s/%s", current_dir, event->name);
+            sprintf(new_dir, "%s/%s", current_dir+size_of_rootDirName, event->name);
 
             syslog(LOG_NOTICE,"Modified path: %s \n", new_dir);
             if (event->mask & IN_CREATE)
@@ -123,7 +125,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 {
 
                     
-                    sendCreateDirectoryPetition(current_dir, event->name);
+                    sendCreateDirectoryPetition(current_dir+size_of_rootDirName, event->name);
                     tail = newThreadForSubDir(new_dir, tail); //monitor the newly created directory
 
                     syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
@@ -132,7 +134,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
                     
-                    sendCreateFileOrModifyPetition(event->name, "", current_dir);
+                    sendCreateFileOrModifyPetition(event->name, "", current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was created.\n", new_dir);
                 }
             }
@@ -147,7 +149,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
 
-                    sendDeleteFilePetition(event->name, current_dir);
+                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was deleted.\n", new_dir);
                 }
             }
@@ -163,7 +165,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
 
-                    sendCreateFileOrModifyPetition(event->name, readFile(event->name), current_dir);
+                    sendCreateFileOrModifyPetition(event->name, readFile(event->name), current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
                 }
             }
@@ -199,7 +201,7 @@ Node* inotifyMonitor(char* current_dir, Node* head, Node* tail){
                 else
                 {
 
-                    sendDeleteFilePetition(event->name, current_dir);
+                    sendDeleteFilePetition(event->name, current_dir+size_of_rootDirName);
                     syslog(LOG_NOTICE, "The file %s was moved out.\n", new_dir);
                 }
             }
@@ -300,6 +302,7 @@ void* directoryMonitorThread(void *dirName){
 //that monitoring thread will recursively monitor all its sub directories.
 int monitor(char* rootDir)
 {   
+    size_of_rootDirName = strlen(rootDir);
     DIR* dir = opendir(rootDir);
     if (dir) {
         closedir(dir);
