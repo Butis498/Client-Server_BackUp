@@ -17,6 +17,68 @@
 #define PORT 8080
 #define SA struct sockaddr
 
+void clientSendUpdate(const char *instruccion){
+
+        int sockfd, connfd;
+    struct sockaddr_in servaddr, cli;
+
+    // socket create and varification
+    sockfd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sockfd == -1)
+    {
+        printf("socket creation failed...\n");
+        exit(0);
+    }
+    else
+        printf("Socket successfully created..\n");
+    bzero(&servaddr, sizeof(servaddr));
+
+    // assign IP, PORT
+    servaddr.sin_family = AF_INET;
+    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_port = htons(PORT);
+
+    // connect the client socket to server socket
+    if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
+    {
+        printf("connection with the server failed...\n");
+        exit(0);
+    }
+    else
+        printf("connected to the server..\n");
+
+    // function for chat
+    //func(sockfd);
+
+    char buff[MAX];
+    int n;
+        
+        bzero(buff, sizeof(buff));
+        //printf("Enter the string : ");
+        n = 0;
+        //while ((buff[n] = instruccion[n++]) != '\n')
+            //;
+        strcpy(buff, instruccion);
+
+        //write(sockfd, buff, sizeof(buff));
+
+        int numbersWritten = write(sockfd, buff, sizeof(buff));
+
+        bzero(buff, sizeof(buff));
+    
+    
+
+    //int numbersWritten = write(sockfd, instruccion, sizeof(instruccion));
+    syslog(LOG_NOTICE, "Numbers written in write(): %d", numbersWritten);
+
+    // close the socket
+    close(sockfd);
+
+    syslog(LOG_NOTICE, "Client daemon terminated.");
+    closelog();
+
+}
+
 char *readFile(const char *fileName)
 {
 
@@ -47,7 +109,10 @@ void sendCreateFileOrModifyPetition(const char * fileName, const char * fileCont
 }
 
 void sendDeleteFilePetition(const char *fileName, const char *directory){
-    //write(sockfd, buff, sizeof(buff));
+    char instruccion[] = "eliminar ";
+    //strcat(instruccion, fileName);
+    
+    clientSendUpdate(instruccion);
 }
 
 void sendDeleteDirectoryPetition(const char *directory){
@@ -67,7 +132,7 @@ void sendRenameFilePetition(const char *directory, const char* oldName ,const ch
 }
 
 
-
+/*
 void func(int sockfd)
 {
     char buff[MAX];
@@ -88,7 +153,7 @@ void func(int sockfd)
         //if ((strncmp(buff, "exit", 4)) == 0)
         if ((strncmp(buff, "operacionExitosa", 16)) == 0)
         {
-            printf("operacionExitosa... Client Exit...\n");
+            printf("\noperacionExitosa... Client Exit...\n");
             break;
         }
     }
@@ -135,10 +200,17 @@ void client(){
     closelog();
 
 }
+*/
 
 //main function for testing purposes
+/*
 int main(){
     
-    client();
+    //client();
+
+    return 0;
 }
+*/
+
+
 

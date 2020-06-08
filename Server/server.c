@@ -12,6 +12,8 @@ void func(int sockfd)
     // infinite loop for chat 
     for (;;) { 
         bzero(buff, MAX); 
+
+        printf("Control 1 \n");
   
         // read the message from client and copy it in buffer 
         read(sockfd, buff, sizeof(buff)); 
@@ -20,12 +22,11 @@ void func(int sockfd)
 
         //Si el mensaje contiene la palabra "eliminar" al principio, ejecutar lógica de eliminar archivo
         if (strncmp("eliminar", buff, 8) == 0) {
-            char fileName[strlen(buff) - 9];
+            char fileName[sizeof(buff) - 9];
             strncpy(fileName, buff + 9, strlen(buff) - 10);
             printf("Se eliminará archivo: \"%s\"\n", fileName);
 
             deleteFile(fileName,"./UpdatedServerFolder");
-
         }
 
         bzero(buff, MAX); 

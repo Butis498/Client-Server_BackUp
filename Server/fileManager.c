@@ -16,23 +16,36 @@
 
 void deleteFile(const char *fileName, const char *directory)
 {
-    int size = strlen(fileName) + strlen(directory) + 5;
+    int size = strlen(fileName) + strlen(directory) + 3;
     char *file = (char *)malloc(size * sizeof(char));
+    //filename = (char*)malloc(strlen(temp)+1);
 
     sprintf(file, "%s/%s", directory, fileName);
     printf("fileName: \"%s\"\n", fileName);
     //sprintf(file, "%s/%s", directory, "0.txt");
     printf("%s\n", file);
-
+/*
+    FILE* fp;
+    fp = open(file, "r");
+    if(fp == NULL) printf("Database error\n");
+    else {
+        fp.close()
+        if(remove(file)) printf("Unable to delete the file\n");
+        else printf("Delete successful\n");
+    }
+*/
     //chdir(directory);
 
     char buffer[1024];
     printf("Current directory: %s\n", getcwd(buffer, sizeof(buffer)));
 
-    if (remove(file) == 0)
+    int status = remove(file);
+
+    if (status == 0)
         printf("Deleted successfully\n");
     else
-        printf("Unable to delete the file\n");
+        //perror("Unable to delete the file, error code is: %d\n", status);
+        perror("Unable to delete the file, error code is: \n");
 
     free(file);
 }
