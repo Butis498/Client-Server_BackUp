@@ -79,7 +79,7 @@ void func(int sockfd)
             char *DirName = args[2];
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[1])) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[1]);
-            printf("Se creara el directorio : \"%s/%s/\"\n", directory, DirName);
+            printf("Se creara el directorio : \"%s%s\"\n", directory, DirName);
 
             createDirectory(directory , DirName);
             free(directory);

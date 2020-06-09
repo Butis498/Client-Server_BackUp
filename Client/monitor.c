@@ -177,6 +177,7 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                 {
 
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
+                    syslog(LOG_NOTICE,"%s" ,readFile(new_dir));
                     sendModifyFilePetition(event->name, readFile(new_dir), current_dir + size_of_rootDirName);
                 }
             }
