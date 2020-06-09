@@ -23,6 +23,7 @@ typedef struct Node
 
 pthread_mutex_t lock;
 pthread_mutex_t list_lock;
+pthread_mutex_t serverRequestLock;
 
 int size_of_rootDirName;
 
@@ -117,14 +118,20 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
     //for every item in the buffer as read from the fd file descriptor
     while (i < length)
     {
-        struct inotify_event *event =
-            (struct inotify_event *)&buffer[i];
-        if (event->len)
+        struct inotify_event *event = (struct inotify_event *)&buffer[i];
+
+        
+        if (event->len && !((event->name)[0] == '.'))
         {
             char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir) + 2) * sizeof(char));
             sprintf(new_dir, "%s/%s", current_dir, event->name);
 
+            if ((event->name)[0] == '.') syslog(LOG_NOTICE, "FIRST CHAR = %c \n", (event->name)[0]);
+            
             syslog(LOG_NOTICE, "EVENT DETECTED: modified path = %s \n", new_dir);
+
+        //MUTEX LOCK
+        pthread_mutex_lock(&serverRequestLock);
 
             if (event->mask & IN_CREATE)
             {
@@ -170,7 +177,7 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                 {
 
                     syslog(LOG_NOTICE, "The file %s was modified.\n", new_dir);
-                    sendModifyFilePetition(event->name, readFile(event->name), current_dir + size_of_rootDirName);
+                    sendModifyFilePetition(event->name, readFile(new_dir), current_dir + size_of_rootDirName);
                 }
             }
             else if (event->mask & IN_MOVED_TO)
@@ -185,11 +192,11 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                 }
                 else
                 {
-
                     syslog(LOG_NOTICE, "The file %s was moved.\n", new_dir);
                     /* 
                         Mission impementation
                     */
+                    sendModifyFilePetition(event->name, readFile(new_dir), current_dir + size_of_rootDirName);
                 }
             }
             else if (event->mask & IN_MOVED_FROM)
@@ -208,6 +215,8 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                     sendDeleteFilePetition(event->name, current_dir + size_of_rootDirName);
                 }
             }
+        
+        pthread_mutex_unlock(&serverRequestLock);
         }
         i += EVENT_SIZE + event->len;
     }
@@ -325,7 +334,7 @@ int monitor(char *rootDir)
     }
 
     //iniitalize mutex locks
-    if (pthread_mutex_init(&lock, NULL) != 0 || pthread_mutex_init(&list_lock, NULL))
+    if (pthread_mutex_init(&lock, NULL) != 0 || pthread_mutex_init(&list_lock, NULL) != 0 || pthread_mutex_init(&serverRequestLock, NULL) != 0 )
     {
         syslog(LOG_NOTICE, "\n mutex init failed\n");
         return 0;

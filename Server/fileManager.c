@@ -69,6 +69,8 @@ void deleteFile(const char *fileName, const char *directory)
 
 void CreateOrModifyFile(const char *fileName, const char *fileContet, const char *directory)
 {
+    printf("CREATING FILE IN SERVER: %s - %s\n", fileName, directory);
+    printf("WITH CONTENT: \n%s\n", fileContet);
 
     FILE *file;
     int size = strlen(fileName) + strlen(directory);
@@ -78,6 +80,7 @@ void CreateOrModifyFile(const char *fileName, const char *fileContet, const char
     file = fopen(fileFullPath, "w");
 
     fprintf(file, "%s", fileContet);
+    printf("CONTENT ADDED\n");
 
     free(fileFullPath);
     fclose(file);

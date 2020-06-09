@@ -18,7 +18,7 @@
 #define PORT 8080
 #define SA struct sockaddr
 
-void clientSendUpdate(const char *instruccion){
+void clientSendUpdate(const char *instruccion, const char *fileContents){
 
     //Server connection
     //==============================================================================
@@ -59,27 +59,50 @@ void clientSendUpdate(const char *instruccion){
     int n;
         
         bzero(buff, sizeof(buff));
-        //printf("Enter the string : ");
+
         n = 0;
-        //while ((buff[n] = instruccion[n++]) != '\n')
-            //;
+
         strcpy(buff, instruccion);
 
-        //write(sockfd, buff, sizeof(buff));
         syslog(LOG_NOTICE,"CLIENT: Sending Buffer of contents: %s\n", buff);
 
         int numbersWritten = write(sockfd, buff, sizeof(buff));
 
-        bzero(buff, sizeof(buff));    
+        syslog(LOG_NOTICE, "CLIENT: Number of bytes written in write(): %d\n", numbersWritten);
+        bzero(buff, sizeof(buff));
 
-    //int numbersWritten = write(sockfd, instruccion, sizeof(instruccion));
-    syslog(LOG_NOTICE, "CLIENT: Number of bytes written in write(): %d\n", numbersWritten);
+        sleep(1);
+        read(sockfd, buff, sizeof(buff));
+        syslog(LOG_NOTICE, "CLIENT: Response from Server : %s", buff);
+        bzero(buff, sizeof(buff)); 
+
+        //when thre are file contents to send
+        if(fileContents != NULL){
+
+            strcpy(buff, fileContents);
+            syslog(LOG_NOTICE,"CLIENT: Sending File Contents: %s\n", buff);
+
+            int numbersWritten = write(sockfd, buff, sizeof(buff));
+
+            syslog(LOG_NOTICE, "CLIENT: Number of bytes written in write(): %d\n", numbersWritten);
+            bzero(buff, sizeof(buff));
+
+            int res = 0;
+            do{
+                sleep(0.01);
+                bzero(buff, sizeof(buff));
+                res = read(sockfd, buff, sizeof(buff));
+            }while (res = 0 || buff == 0 || buff[0] == '\0');
+
+            syslog(LOG_NOTICE, "CLIENT: Response2 from Server : %s", buff);
+            bzero(buff, sizeof(buff)); 
+        }
 
     // close the socket
     close(sockfd);
 
     //syslog(LOG_NOTICE, "Client daemon terminated.");
-    syslog(LOG_NOTICE, "EVENT SENT SO SERVER\n");
+    syslog(LOG_NOTICE, "SERVER EVENT FINISHED\n");
     closelog();
 }
 
@@ -112,34 +135,51 @@ char *readFile(const char *fileName)
 void sendCreateFilePetition(const char * fileName, const char *directory){
 
     char *instruccion = (char *) malloc((strlen(fileName)+strlen(directory)+strlen("createFile")+ 6)* sizeof(char));
-    sprintf(instruccion,"createFile %s %s",fileName,directory);
-    clientSendUpdate(instruccion);
+    sprintf(instruccion,"createFile %s %s", fileName, directory);
+    clientSendUpdate(instruccion, NULL);
 
 }
 
+//fileName the name of the modified file: eg. archivo.txt
+//directory the name of the containing directory. eg. MonitoredClientFolder/NEW FOLDER/NEW FOLDER 2
 void sendModifyFilePetition(const char * fileName, const char * fileContet, const char *directory){
 
+    //convert the content lenght to a string
+    long contentLenght = strlen(fileContet);
+    char contLenght[32];
+
+    sprintf(contLenght, "%ld", contentLenght);
+
+    char *instruccion = (char *) malloc((strlen(contLenght) + strlen(fileName) + strlen(directory) + strlen("modifyFile") + 6)* sizeof(char));
+    sprintf(instruccion,"modifyFile %s %s %s", contLenght, fileName, directory);
+
+    syslog(LOG_NOTICE, "MODIFY PETITION TO BE SENT.\n");
+
+    char *contents = (char *) malloc((strlen(fileContet) + 1) * sizeof(char));
+    sprintf(contents,"%s", fileContet);    
+
+    clientSendUpdate(instruccion, contents);
 }
 
 void sendDeleteFilePetition(const char *fileName, const char *directory){
     char *instruccion = (char *) malloc((strlen(fileName)+strlen(directory)+strlen("delete")+ 6)* sizeof(char));
-    sprintf(instruccion,"delete %s %s",fileName,directory);
-    clientSendUpdate(instruccion);
+    sprintf(instruccion,"delete %s %s", fileName, directory);
+    clientSendUpdate(instruccion, NULL);
 }
 
 void sendDeleteDirectoryPetition(const char *directory){
 
     char *instruccion = (char *) malloc((strlen(directory)+strlen("deleteDir")+3)* sizeof(char));
-    sprintf(instruccion,"deleteDir %s",directory);
-    clientSendUpdate(instruccion);
+    sprintf(instruccion,"deleteDir %s", directory);
+    clientSendUpdate(instruccion, NULL);
 
 }
 
 void sendCreateDirectoryPetition(const char *directory , const char * dirName){
 
     char *instruccion = (char *) malloc((strlen(directory)+strlen("createDir")+ 6)* sizeof(char));
-    sprintf(instruccion,"createDir %s /%s",directory,dirName);
-    clientSendUpdate(instruccion);
+    sprintf(instruccion,"createDir %s /%s", directory, dirName);
+    clientSendUpdate(instruccion, NULL);
 
 }
 

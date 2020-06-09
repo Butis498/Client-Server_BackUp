@@ -1,4 +1,6 @@
+rm -r Server/UpdatedServerFolder
 mkdir Server/UpdatedServerFolder
 gcc Server/server.c -o Server/server
-./Server/server
-rm /Server/server
+cd Server/
+./server
+rm server

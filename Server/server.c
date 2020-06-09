@@ -39,7 +39,7 @@ void func(int sockfd)
         // read the message from client and copy it in buffer
         read(sockfd, buff, sizeof(buff));
         // print buffer which contains the client contents
-        printf("From client: %s\t To client : ", buff);
+        printf("From client: %s <--------> To client : \n", buff);
 
         char *args[6];
         splitArgs(buff, args);
@@ -73,7 +73,8 @@ void func(int sockfd)
 
             CreateFile(fileName, directory);
             free(directory);
-        }else if (strcmp("createDir", args[0]) == 0)
+        }
+        else if (strcmp("createDir", args[0]) == 0)
         {
             char *DirName = args[2];
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[1])) * sizeof(char));
@@ -81,6 +82,48 @@ void func(int sockfd)
             printf("Se creara el directorio : \"%s%s\"\n", directory, DirName);
 
             createDirectory(directory , DirName);
+            free(directory);
+        }
+        else if(strcmp("modifyFile", args[0]) == 0){
+            
+            char *fileName = args[2];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(args[3]) + 1) * sizeof(char));
+
+            sprintf(directory, "%s%s", folderName, args[3]);
+            printf("Se modificara el archivo: \"%s%s\"\n", directory, fileName);
+
+
+            int contentSize = atoi(args[1]);
+            char *fileContent = (char *)malloc((contentSize + 1) * sizeof(char)); //set content to the correct full size
+            
+            printf("SIZE SET\n");
+
+            //send aknowlegment 
+            strncpy(buff, "Preparado para recibir contenido", strlen("Preparado para recibir contenido"));
+            printf("SERVER: Sending Aknowledgment: %s\n", buff);
+
+            int numbersWritten = write(sockfd, buff, sizeof(buff));
+
+            sleep(1);
+            bzero(buff, sizeof(buff));
+
+            //read content from socket 
+            //read(sockfd, buff, sizeof(buff));
+            int res = 0;
+            do{
+                sleep(0.01);
+                bzero(buff, sizeof(buff));
+                res = read(sockfd, buff, sizeof(buff));
+            }while (res = 0 || buff == 0 || buff[0] == '\0');
+
+            printf("SERVER: Response from client with content: %s", buff);
+            //copy buffer to content
+            strncpy(fileContent, buff, strlen(buff) + 1);
+
+            bzero(buff, sizeof(buff)); 
+
+            //Actually modify the file
+            CreateOrModifyFile(fileName, fileContent, directory);
             free(directory);
         }
         
@@ -111,6 +154,10 @@ void func(int sockfd)
 // Driver function
 int main()
 {
+    char pwd[1024];
+    getcwd(pwd, sizeof(pwd));
+    printf("INITIALIZING SERVER FROM DIR: %s\n", pwd);
+
     while (1)
     {
 
