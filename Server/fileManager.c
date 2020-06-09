@@ -106,7 +106,7 @@ int deleteDirectory(char *directory)
 {
     
     DIR *d = opendir(directory);
-    printf("%s\n", directory);
+    printf("DELETING: %s\n", directory);
 
     size_t path_len = strlen(directory);
     int r = -1;
@@ -156,22 +156,30 @@ int deleteDirectory(char *directory)
 
 void createDirectory(const char *directory, const char *dirName)
 {
-
+   
     struct stat st = {0};
     int size = strlen(dirName) + strlen(directory) + 3;
     char *dirFullPath = (char *)malloc(size * sizeof(char));
-
     sprintf(dirFullPath, "%s/%s", directory, dirName);
-    int check;
 
+
+    printf("CREATING: %s\n", dirFullPath);
+    DIR *d = opendir(dirFullPath);
+    if(d){
+        printf("Directory already existed\n");
+        return;
+    }
+    printf("Directory not exists... proceding\n");
+    
+    int check;
     check = mkdir(dirFullPath, 0777);
 
     // check if directory is created or not
     if (!check)
-        syslog(LOG_NOTICE, "Directory created\n");
+        printf("Directory created\n");
     else
     {
-        syslog(LOG_NOTICE, "Unable to create directory\n");
+        printf("Unable to create directory\n");
         exit(1);
     }
 
@@ -191,11 +199,11 @@ void renameFile(const char *directory, const char* oldName ,const char * newName
 
     if (rename(fileFullPath, fileFullPathNew) == 0)
     {
-        syslog(LOG_NOTICE, "File renamed successfully.\n");
+        printf("File renamed successfully.\n");
     }
     else
     {
-        syslog(LOG_NOTICE, "Unable to rename files. Please check files exist and you have permissions to modify files.\n");
+        printf("Unable to rename files. Please check files exist and you have permissions to modify files.\n");
     }
 
 }
@@ -213,11 +221,11 @@ void renameDirectory(const char *directory, const char* oldName ,const char * ne
 
     if (rename(fileFullPath, fileFullPathNew) == 0)
     {
-        syslog(LOG_NOTICE, "Directory renamed successfully.\n");
+        printf("Directory renamed successfully.\n");
     }
     else
     {
-        syslog(LOG_NOTICE, "Unable to rename directory. Please check directory exist and you have permissions to modify files.\n");
+        printf("Unable to rename directory. Please check directory exist and you have permissions to modify files.\n");
     }
 }
 

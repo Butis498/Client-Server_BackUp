@@ -161,7 +161,7 @@ void sendModifyFilePetition(const char *fileName, const char *fileContet, const 
 {
 
     //convert the content lenght to a string
-    long contentLenght = strlen(fileContet);
+    long contentLenght = strlen(fileContet) + 1;
     char contLenght[32];
 
     sprintf(contLenght, "%ld", contentLenght);
@@ -171,8 +171,8 @@ void sendModifyFilePetition(const char *fileName, const char *fileContet, const 
 
     syslog(LOG_NOTICE, "MODIFY PETITION TO BE SENT.\n");
 
-    char *contents = (char *)malloc((strlen(fileContet) + 1) * sizeof(char));
-    sprintf(contents, "%s", fileContet);
+    char *contents = (char *)malloc((strlen(fileContet) + 2) * sizeof(char));
+    sprintf(contents, "$%s", fileContet);
 
     clientSendUpdate(instruccion, contents);
 }
@@ -194,8 +194,9 @@ void sendDeleteDirectoryPetition(const char *directory)
 
 void sendCreateDirectoryPetition(const char *directory, const char *dirName)
 {
+    syslog(LOG_NOTICE, "CREATE DIR PETITION TO BE SENT: %s/%s\n", directory, dirName);
 
-    char *instruccion = (char *)malloc((strlen(directory) + strlen("createDir") + 6) * sizeof(char));
+    char *instruccion = (char *)malloc((strlen(directory) + strlen(dirName) + strlen("createDir") + 6) * sizeof(char));
     sprintf(instruccion, "createDir %s /%s", directory, dirName);
     clientSendUpdate(instruccion, NULL);
 }

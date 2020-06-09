@@ -26,6 +26,7 @@ pthread_mutex_t list_lock;
 pthread_mutex_t serverRequestLock;
 
 int size_of_rootDirName;
+char *ROOTDIR;
 
 //function declarations
 void sig_func(int sig);
@@ -141,7 +142,7 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                     syslog(LOG_NOTICE, "The directory %s was created.\n", new_dir);
                     tail = newThreadForSubDir(new_dir, tail); //monitor the newly created directory
 
-                    sendCreateDirectoryPetition(current_dir + size_of_rootDirName, event->name);
+                    //sendCreateDirectoryPetition(current_dir + size_of_rootDirName, event->name);
                 }
                 else
                 {
@@ -189,7 +190,7 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
                     syslog(LOG_NOTICE, "The directory %s was moved.\n", new_dir);
                     tail = newThreadForSubDir(new_dir, tail); //monitor the new name of the modified directory
 
-                    sendCreateDirectoryPetition(current_dir + size_of_rootDirName, event->name);
+                    //sendCreateDirectoryPetition(current_dir + size_of_rootDirName, event->name);
                 }
                 else
                 {
@@ -247,6 +248,31 @@ void *directoryMonitorThread(void *dirName)
 
     syslog(LOG_NOTICE, "CREATING MONITOR-THREAD FOR DIR: %s\n", current_dir);
 
+    syslog(LOG_NOTICE, "IS FIRST?: %d\n", strncmp(current_dir, ROOTDIR, strlen(current_dir)));
+
+    //MUTEX LOCK
+pthread_mutex_lock(&serverRequestLock);
+    //if not the root dir, then create a directory in the server
+    if(!(strncmp(current_dir, ROOTDIR, strlen(current_dir)) == 0)){
+
+        char *dirWithoutRoot;
+
+        int fullDirLen = strlen(dirName);
+        int lastSlashIndex = fullDirLen - 1;
+        for (; lastSlashIndex >= 0 && current_dir[lastSlashIndex] != '/'; lastSlashIndex--){}
+
+        syslog(LOG_NOTICE, "lastSlashIndex = %d\n", lastSlashIndex);
+
+        char *dirWithoutTarget = (char*)malloc((lastSlashIndex + 1) * sizeof(char));
+        strncpy(dirWithoutTarget, current_dir, lastSlashIndex);
+        dirWithoutTarget[lastSlashIndex] = '\0';
+        
+
+        sendCreateDirectoryPetition(dirWithoutTarget + size_of_rootDirName, current_dir + lastSlashIndex + 1);
+    }
+pthread_mutex_unlock(&serverRequestLock);
+
+
     //Get contents of the directory
     DIR *d;
     struct dirent *dir;
@@ -285,15 +311,30 @@ void *directoryMonitorThread(void *dirName)
                     newMonitor.thread = newThread;
                     newMonitor.alive = 1;
 
-                    pthread_mutex_lock(&list_lock);
+                 pthread_mutex_lock(&list_lock);
                     //push the monitor to the list, and update the tail
                     tail->data = newMonitor;
                     tail->next = (Node *)malloc(sizeof(Node));
                     tail->next->next = NULL;
 
                     tail = tail->next;
-                    pthread_mutex_unlock(&list_lock);
+                pthread_mutex_unlock(&list_lock);
                 }
+            }else if (dir->d_type == 8 && dir->d_name[0] != '.'){ //for file wich arent a directory
+            pthread_mutex_lock(&serverRequestLock);
+
+                //copy of the new nested dir name concatenated to the current dir
+                char *nested_dir = (char *)(malloc((strlen(dir->d_name) + strlen(current_dir) + 2) * sizeof(char)));
+                sprintf(nested_dir, "%s/%s", current_dir, dir->d_name);
+
+                //obtain name wiyhout root dir
+                int fullDirLen = strlen(dirName);
+
+                syslog(LOG_NOTICE, "CREATING NEW FILE : %s, %s, CONTENTS:\n ->%s\n", dir->d_name, current_dir + size_of_rootDirName, readFile(nested_dir));
+                
+                sendModifyFilePetition(dir->d_name, readFile(nested_dir), current_dir + size_of_rootDirName);
+
+            pthread_mutex_unlock(&serverRequestLock);
             }
         }
         closedir(d);
@@ -318,6 +359,8 @@ void *directoryMonitorThread(void *dirName)
 int monitor(char *rootDir)
 {
     size_of_rootDirName = strlen(rootDir);
+    ROOTDIR = rootDir;
+
     DIR *dir = opendir(rootDir);
 
     //Verify existence of directory

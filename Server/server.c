@@ -118,7 +118,7 @@ void func(int sockfd)
 
             printf("SERVER: Response from client with content: %s", buff);
             //copy buffer to content
-            strncpy(fileContent, buff, strlen(buff) + 1);
+            strncpy(fileContent, buff + 1, strlen(buff));
 
             bzero(buff, sizeof(buff)); 
 
