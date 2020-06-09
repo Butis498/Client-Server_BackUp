@@ -126,7 +126,7 @@ Node *inotifyMonitor(char *current_dir, Node *head, Node *tail)
             char *new_dir = (char *)malloc((strlen(event->name) + strlen(current_dir) + 2) * sizeof(char));
             sprintf(new_dir, "%s/%s", current_dir, event->name);
 
-            if ((event->name)[0] == '.') syslog(LOG_NOTICE, "FIRST CHAR = %c \n", (event->name)[0]);
+            //if ((event->name)[0] == '.') syslog(LOG_NOTICE, "FIRST CHAR = %c \n", (event->name)[0]);
             
             syslog(LOG_NOTICE, "EVENT DETECTED: modified path = %s \n", new_dir);
 

@@ -50,7 +50,7 @@ void func(int sockfd)
             char *fileName = args[1];
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[2]);
-            printf("Se eliminará archivo: \"%s%s\"\n", directory, fileName);
+            printf("Se eliminará archivo: \"%s/%s\"\n", directory, fileName);
 
             deleteFile(fileName, directory);
             free(directory);
@@ -59,7 +59,7 @@ void func(int sockfd)
         {
             char *directory = (char *)malloc((strlen(args[1])+ strlen(folderName)+2) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[1]);
-            printf("Se eliminará directorio: \"%s\"\n", directory);
+            printf("Se eliminará directorio: \"%s/\"\n", directory);
 
             deleteDirectory(directory);
             free(directory);
@@ -69,7 +69,7 @@ void func(int sockfd)
             char *fileName = args[1];
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[2]);
-            printf("Se creara archivo: \"%s%s\"\n", directory, fileName);
+            printf("Se creara archivo: \"%s/%s\"\n", directory, fileName);
 
             CreateFile(fileName, directory);
             free(directory);
@@ -79,7 +79,7 @@ void func(int sockfd)
             char *DirName = args[2];
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[1])) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[1]);
-            printf("Se creara el directorio : \"%s%s\"\n", directory, DirName);
+            printf("Se creara el directorio : \"%s/%s/\"\n", directory, DirName);
 
             createDirectory(directory , DirName);
             free(directory);
@@ -90,7 +90,7 @@ void func(int sockfd)
             char *directory = (char *)malloc((strlen(folderName) + strlen(args[3]) + 1) * sizeof(char));
 
             sprintf(directory, "%s%s", folderName, args[3]);
-            printf("Se modificara el archivo: \"%s%s\"\n", directory, fileName);
+            printf("Se modificara el archivo: \"%s/%s\"\n", directory, fileName);
 
 
             int contentSize = atoi(args[1]);
