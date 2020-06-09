@@ -128,7 +128,8 @@ void sendDeleteFilePetition(const char *fileName, const char *directory){
 }
 
 void sendDeleteDirectoryPetition(const char *directory){
-    char *instruccion = (char *) malloc((strlen(directory)+strlen("deleteDir")+ 6)* sizeof(char));
+
+    char *instruccion = (char *) malloc((strlen(directory)+strlen("deleteDir")+3)* sizeof(char));
     sprintf(instruccion,"deleteDir %s",directory);
     clientSendUpdate(instruccion);
 

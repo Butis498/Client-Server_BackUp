@@ -57,7 +57,7 @@ void func(int sockfd)
         }
         else if (strcmp("deleteDir", args[0]) == 0)
         {
-            char *directory = (char *)malloc((strlen(args[1])+2) * sizeof(char));
+            char *directory = (char *)malloc((strlen(args[1])+ strlen(folderName)+2) * sizeof(char));
             sprintf(directory, "%s%s", folderName, args[1]);
             printf("Se eliminará directorio: \"%s\"\n", directory);
 

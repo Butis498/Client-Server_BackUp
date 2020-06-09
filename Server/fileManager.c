@@ -99,8 +99,9 @@ void CreateFile(const char *fileName, const char *directory)
 }
 
 
-int deleteDirectory(const char *directory)
+int deleteDirectory(char *directory)
 {
+    
     DIR *d = opendir(directory);
     printf("%s\n", directory);
 
