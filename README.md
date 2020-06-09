@@ -18,6 +18,10 @@ which will start running the server for the UpdaterServerFolder updates.
 open a linux terminal and type 
 ```console
 grep firstdaemon /var/log/syslog
+
+or
+
+grep serviceBackUp /var/log/syslog
 ```
 this will open the log of the events in the service.
 

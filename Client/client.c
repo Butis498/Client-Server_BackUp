@@ -14,7 +14,7 @@
 #include <netdb.h>
 #include <sys/socket.h>
 
-#define MAX 80
+#define MAX 2000
 #define PORT 8080
 #define SA struct sockaddr
 
@@ -72,9 +72,17 @@ void clientSendUpdate(const char *instruccion, const char *fileContents)
     syslog(LOG_NOTICE, "CLIENT: Number of bytes written in write(): %d\n", numbersWritten);
     bzero(buff, sizeof(buff));
 
-    sleep(1);
-    read(sockfd, buff, sizeof(buff));
+    //sleep(1);
+    //read(sockfd, buff, sizeof(buff));
+    int res = 0;
+    do{
+        //sleep(0.01);
+        bzero(buff, sizeof(buff));
+        res = read(sockfd, buff, sizeof(buff));
+    }while (res = 0 || buff == 0 || buff[0] == '\0');
+
     syslog(LOG_NOTICE, "CLIENT: Response from Server : %s", buff);
+
     bzero(buff, sizeof(buff));
 
     //when thre are file contents to send
@@ -92,7 +100,7 @@ void clientSendUpdate(const char *instruccion, const char *fileContents)
         int res = 0;
         do
         {
-            sleep(0.01);
+            //sleep(0.01);
             bzero(buff, sizeof(buff));
             res = read(sockfd, buff, sizeof(buff));
         } while (res = 0 || buff == 0 || buff[0] == '\0');
@@ -191,42 +199,6 @@ void sendCreateDirectoryPetition(const char *directory, const char *dirName)
     sprintf(instruccion, "createDir %s /%s", directory, dirName);
     clientSendUpdate(instruccion, NULL);
 }
-
-void sendRenameDirectoryPetition(const char *directory, const char *oldName, const char *newName)
-{
-}
-
-void sendRenameFilePetition(const char *directory, const char *oldName, const char *newName)
-{
-}
-
-/*
-void func(int sockfd)
-{
-    char buff[MAX];
-    int n;
-    for (;;)
-    {
-        
-        bzero(buff, sizeof(buff));
-        printf("Enter the string : ");
-        n = 0;
-        while ((buff[n++] = getchar()) != '\n')
-            ;
-
-        write(sockfd, buff, sizeof(buff));
-        bzero(buff, sizeof(buff));
-        read(sockfd, buff, sizeof(buff));
-        printf("From Server : %s", buff);
-        //if ((strncmp(buff, "exit", 4)) == 0)
-        if ((strncmp(buff, "operacionExitosa", 16)) == 0)
-        {
-            printf("\noperacionExitosa... Client Exit...\n");
-            break;
-        }
-    }
-}
-
 
 //main function for testing purposes
 /*

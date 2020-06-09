@@ -1,6 +1,6 @@
 
 #include "fileManager.c"
-#define MAX 200
+#define MAX 2000
 #define PORT 8080
 #define SA struct sockaddr
 char *folderName = "UpdatedServerFolder";
@@ -111,7 +111,7 @@ void func(int sockfd)
             //read(sockfd, buff, sizeof(buff));
             int res = 0;
             do{
-                sleep(0.01);
+                //sleep(0.01);
                 bzero(buff, sizeof(buff));
                 res = read(sockfd, buff, sizeof(buff));
             }while (res = 0 || buff == 0 || buff[0] == '\0');
@@ -130,21 +130,12 @@ void func(int sockfd)
 
         bzero(buff, MAX);
         n = 0;
-        // copy server message in the buffer
-        /*while ((buff[n++] = getchar()) != '\n') 
-            ; */
 
         //Si todo salió bien, mandar un mensaje de "operacionExitosa"
         strncpy(buff, "operacionExitosa", strlen("operacionExitosa"));
 
         // and send that buffer to client
         write(sockfd, buff, sizeof(buff));
-
-        // if msg contains "Exit" then server exit and chat ended.
-        /*if (strncmp("exit", buff, 4) == 0) { 
-            printf("Server Exit...\n"); 
-            break; 
-        }*/
 
         //salir del loop
         break;
