@@ -1,4 +1,4 @@
 mkdir MonitoredClientFolder
 gcc Client/service.c -o serviceBackUp -pthread
-./serviceBackUp
+./serviceBackUp $1 $2
 rm serviceBackUp

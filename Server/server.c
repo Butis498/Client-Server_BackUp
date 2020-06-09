@@ -1,25 +1,27 @@
 
 #include "fileManager.c"
 #define MAX 2000
-#define PORT 8080
+//#define PORT 8080
 #define SA struct sockaddr
-char *folderName = "UpdatedServerFolder";
 
-void splitArgs(const char *string, char *args[])
+char *folderName = "UpdatedServerFolder";
+int PORT = 8080;
+
+void splitArgs(const char *string, char *serverArgs[])
 {
     // Make a local copy of the string that we can manipulate.
     char *const copy = strdup(string);
     char *space = copy;
     int i = 1;
     // Find the next space in the string, and replace it with a newline.
-    args[0] = copy;
+    serverArgs[0] = copy;
     while (space = strchr(space, ' '))
     {
 
         *space = 0;
         space++;
 
-        args[i] = space;
+        serverArgs[i] = space;
         i++;
     }
 }
@@ -41,59 +43,59 @@ void func(int sockfd)
         // print buffer which contains the client contents
         printf("From client: %s <--------> To client : \n", buff);
 
-        char *args[6];
-        splitArgs(buff, args);
+        char *serverArgs[6];
+        splitArgs(buff, serverArgs);
 
         //Si el mensaje contiene la palabra "eliminar" al principio, ejecutar lógica de eliminar archivo
-        if (strcmp("delete", args[0]) == 0)
+        if (strcmp("delete", serverArgs[0]) == 0)
         {
-            char *fileName = args[1];
-            char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
-            sprintf(directory, "%s%s", folderName, args[2]);
+            char *fileName = serverArgs[1];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(serverArgs[2])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, serverArgs[2]);
             printf("Se eliminará archivo: \"%s/%s\"\n", directory, fileName);
 
             deleteFile(fileName, directory);
             free(directory);
         }
-        else if (strcmp("deleteDir", args[0]) == 0)
+        else if (strcmp("deleteDir", serverArgs[0]) == 0)
         {
-            char *directory = (char *)malloc((strlen(args[1])+ strlen(folderName)+2) * sizeof(char));
-            sprintf(directory, "%s%s", folderName, args[1]);
+            char *directory = (char *)malloc((strlen(serverArgs[1])+ strlen(folderName)+2) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, serverArgs[1]);
             printf("Se eliminará directorio: \"%s/\"\n", directory);
 
             deleteDirectory(directory);
             free(directory);
         }
-        else if (strcmp("createFile", args[0]) == 0)
+        else if (strcmp("createFile", serverArgs[0]) == 0)
         {
-            char *fileName = args[1];
-            char *directory = (char *)malloc((strlen(folderName) + strlen(args[2])) * sizeof(char));
-            sprintf(directory, "%s%s", folderName, args[2]);
+            char *fileName = serverArgs[1];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(serverArgs[2])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, serverArgs[2]);
             printf("Se creara archivo: \"%s/%s\"\n", directory, fileName);
 
             CreateFile(fileName, directory);
             free(directory);
         }
-        else if (strcmp("createDir", args[0]) == 0)
+        else if (strcmp("createDir", serverArgs[0]) == 0)
         {
-            char *DirName = args[2];
-            char *directory = (char *)malloc((strlen(folderName) + strlen(args[1])) * sizeof(char));
-            sprintf(directory, "%s%s", folderName, args[1]);
+            char *DirName = serverArgs[2];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(serverArgs[1])) * sizeof(char));
+            sprintf(directory, "%s%s", folderName, serverArgs[1]);
             printf("Se creara el directorio : \"%s%s\"\n", directory, DirName);
 
             createDirectory(directory , DirName);
             free(directory);
         }
-        else if(strcmp("modifyFile", args[0]) == 0){
+        else if(strcmp("modifyFile", serverArgs[0]) == 0){
             
-            char *fileName = args[2];
-            char *directory = (char *)malloc((strlen(folderName) + strlen(args[3]) + 1) * sizeof(char));
+            char *fileName = serverArgs[2];
+            char *directory = (char *)malloc((strlen(folderName) + strlen(serverArgs[3]) + 1) * sizeof(char));
 
-            sprintf(directory, "%s%s", folderName, args[3]);
+            sprintf(directory, "%s%s", folderName, serverArgs[3]);
             printf("Se modificara el archivo: \"%s/%s\"\n", directory, fileName);
 
 
-            int contentSize = atoi(args[1]);
+            int contentSize = atoi(serverArgs[1]);
             char *fileContent = (char *)malloc((contentSize + 1) * sizeof(char)); //set content to the correct full size
             
             printf("SIZE SET\n");
@@ -143,11 +145,17 @@ void func(int sockfd)
 }
 
 // Driver function
-int main()
+int main(int argc, char *argv[])
 {
     char pwd[1024];
     getcwd(pwd, sizeof(pwd));
     printf("INITIALIZING SERVER FROM DIR: %s\n", pwd);
+
+    if(argc >= 2){
+        PORT = atoi(argv[1]);
+    }
+
+    printf("RUNNING ON PORT: %d\n", PORT);
 
     while (1)
     {

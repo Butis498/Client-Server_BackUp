@@ -15,8 +15,11 @@
 #include <sys/socket.h>
 
 #define MAX 2000
-#define PORT 8080
+//#define PORT 8080
 #define SA struct sockaddr
+
+int PORT = 8080;
+char *HOST = "127.0.0.1";
 
 void clientSendUpdate(const char *instruccion, const char *fileContents)
 {
@@ -41,13 +44,13 @@ void clientSendUpdate(const char *instruccion, const char *fileContents)
 
     // assign IP, PORT
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
+    servaddr.sin_addr.s_addr = inet_addr(HOST);
     servaddr.sin_port = htons(PORT);
 
     // connect the client socket to server socket
     if (connect(sockfd, (SA *)&servaddr, sizeof(servaddr)) != 0)
     {
-        syslog(LOG_NOTICE, "ERROR: connection with the server failed...\n");
+        syslog(LOG_NOTICE, "ERROR: connection with the server %s failed...\n", HOST);
         exit(0);
     }
     else
