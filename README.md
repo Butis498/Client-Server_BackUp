@@ -2,38 +2,43 @@
 
 ## Give permission to run file ##
 ```console
-chmod +x run.sh
+chmod +x runClient.sh
+chmod +x runServer.sh
 ```
-## Run executable ##
+## Run server executable ##
 ```console
-./run.sh
+./runServer.sh 8080
 ```
-This will create a folder named 'MonitoredFolder' which will be monitored by the service. The service also will start. After this you open a new linux terminal in which you run the comand:
+This willcreate a folder Service/UpdatedServerFolder/ that will hold the backup of the client directory. It also start running the server for the UpdaterServerFolder updates.The 8080 argument represents the port to be used by the server and can be changed depending on user needs. Don't close this terminal. Open a new terminal.
+
+## Run client executable ##
 ```console
-./Server/server
+./runClient.sh 8080 [THE SERVER IP]
 ```
-which will start running the server for the UpdaterServerFolder updates.
+This will create a folder named 'MonitoredFolder' which will be monitored by the client service. The client monitoring service also will start. This service can be found with the name "serviceBackUp". The 8080 argument represents the port to be used to call the server. You must replace the [THE SERVER IP] argument with the actual server IP. (example: 127.0.0.1 if you are running the server on the same computer as the client)
+
+
 ## TEST FUNCTIONALITY ##
 
 open a linux terminal and type 
 ```console
-grep firstdaemon /var/log/syslog
+grep serviceBackUp /var/log/syslog
 
 or
 
-grep serviceBackUp /var/log/syslog
+grep firstdaemon /var/log/syslog
 ```
-this will open the log of the events in the service.
+this will open the log of the events in the service. (use grep serviceBackUp preferently)
 
 ### Kill the service ###
 
 Open a linux terminal and type 
 ```console
-grep firstdaemon /var/log/syslog
+grep serviceBackUp /var/log/syslog
 ```
 this will return something like :
 ```console
-firstdaemon[5852]
+serviceBackUp[5852]
 ```
 with other data, you should type in the terminal 
 ```console 
